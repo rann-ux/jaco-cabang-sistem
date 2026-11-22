@@ -8,12 +8,11 @@ class Cabang extends Model
 {
     protected $table = 'cabangs';
     protected $primaryKey = 'id_cabang';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'id_cabang',
         'nama_cabang',
         'jenis',
         'alamat',

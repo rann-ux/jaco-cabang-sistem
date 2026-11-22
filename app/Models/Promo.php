@@ -8,12 +8,11 @@ class Promo extends Model
 {
     protected $table = 'promos';
     protected $primaryKey = 'id_promo';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'id_promo',
         'kode_promo',
         'deskripsi',
         'jenis_potongan',
@@ -21,6 +20,12 @@ class Promo extends Model
         'tgl_mulai',
         'tgl_selesai',
         'status',
+    ];
+
+    protected $casts = [
+        'nilai' => 'decimal:2',
+        'tgl_mulai' => 'date',
+        'tgl_selesai' => 'date',
     ];
 
     public function fakturs()

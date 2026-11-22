@@ -8,12 +8,11 @@ class LaporanHarian extends Model
 {
     protected $table = 'laporan_harians';
     protected $primaryKey = 'id_laporan';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'id_laporan',
         'id_cabang',
         'id_karyawan',
         'tanggal',

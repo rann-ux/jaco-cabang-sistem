@@ -1,3 +1,5 @@
+name: jaco-cabang-sistem
+
 services:
   app:
     build:
@@ -6,8 +8,10 @@ services:
       target: app
     container_name: jaco-laravel
     restart: unless-stopped
+    volumes:
+      - .:/var/www/html
     environment:
-      APP_NAME: "Jaco Jambi Sistem"
+      APP_NAME: "Jaco Cabang Sistem"
       APP_ENV: local
       APP_KEY: ${APP_KEY}
       APP_DEBUG: "true"
@@ -18,7 +22,7 @@ services:
       DB_CONNECTION: mysql
       DB_HOST: db
       DB_PORT: 3306
-      DB_DATABASE: jaco_jambi
+      DB_DATABASE: jaco_db
       DB_USERNAME: jaco_user
       DB_PASSWORD: ${MYSQL_PASSWORD:-local_app_password}
     depends_on:
@@ -46,7 +50,7 @@ services:
     container_name: jaco-mysql
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: jaco_jambi
+      MYSQL_DATABASE: jaco_db
       MYSQL_USER: jaco_user
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-local_app_password}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local_root_password}

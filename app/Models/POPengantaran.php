@@ -8,12 +8,11 @@ class POPengantaran extends Model
 {
     protected $table = 'po_pengantarans';
     protected $primaryKey = 'id_po';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'id_po',
         'id_faktur',
         'tanggal',
         'status',

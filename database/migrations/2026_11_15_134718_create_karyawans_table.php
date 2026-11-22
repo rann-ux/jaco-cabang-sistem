@@ -9,11 +9,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('karyawans', function (Blueprint $table) {
-            $table->string('id_karyawan', 20)->primary();
-            $table->string('id_cabang', 20);
-            $table->string('nama');
-            $table->string('peran', 30);
-            $table->string('status', 20);
+            $table->increments('id_karyawan');
+            $table->unsignedInteger('id_cabang');
+            $table->string('nama', 100);
+            $table->enum('peran', [
+                'manajer_cabang',
+                'sales',
+                'admin',
+                'gudang',
+                'pengantaran',
+            ]);
+            $table->string('status', 20)->default('aktif');
 
             $table->foreign('id_cabang')
                 ->references('id_cabang')

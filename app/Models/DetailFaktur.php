@@ -8,17 +8,22 @@ class DetailFaktur extends Model
 {
     protected $table = 'detail_fakturs';
     protected $primaryKey = 'id_detail';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'id_detail',
         'id_faktur',
         'id_produk',
         'jumlah',
         'harga_satuan',
         'subtotal',
+    ];
+
+    protected $casts = [
+        'jumlah' => 'integer',
+        'harga_satuan' => 'decimal:2',
+        'subtotal' => 'decimal:2',
     ];
 
     public function faktur()

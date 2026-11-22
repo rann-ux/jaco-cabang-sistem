@@ -9,10 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('po_pengantarans', function (Blueprint $table) {
-            $table->string('id_po', 20)->primary();
-            $table->string('id_faktur', 20)->unique();
+            $table->increments('id_po');
+            $table->unsignedInteger('id_faktur')->unique();
             $table->date('tanggal');
-            $table->string('status', 30);
+            $table->string('status', 20)->default('baru');
 
             $table->foreign('id_faktur')
                 ->references('id_faktur')

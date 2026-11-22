@@ -8,12 +8,11 @@ class Karyawan extends Model
 {
     protected $table = 'karyawans';
     protected $primaryKey = 'id_karyawan';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'id_karyawan',
         'id_cabang',
         'nama',
         'peran',

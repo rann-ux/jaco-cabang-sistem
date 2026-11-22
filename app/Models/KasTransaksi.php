@@ -8,12 +8,11 @@ class KasTransaksi extends Model
 {
     protected $table = 'kas_transaksis';
     protected $primaryKey = 'id_kas';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'id_kas',
         'id_cabang',
         'id_karyawan',
         'id_faktur',
@@ -24,7 +23,7 @@ class KasTransaksi extends Model
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal' => 'datetime',
         'jumlah' => 'decimal:2',
     ];
 
