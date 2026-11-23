@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'central_mock' => [
+        'url' => env('CENTRAL_MOCK_URL', 'http://central-mock:3000'),
+    ],
+
 ];

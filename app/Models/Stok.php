@@ -8,17 +8,22 @@ class Stok extends Model
 {
     protected $table = 'stoks';
     protected $primaryKey = 'id_stok';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'id_stok',
         'id_cabang',
         'id_produk',
         'jumlah',
         'batas_minimum',
         'tgl_update',
+    ];
+
+    protected $casts = [
+        'jumlah' => 'integer',
+        'batas_minimum' => 'integer',
+        'tgl_update' => 'datetime',
     ];
 
     public function cabang()

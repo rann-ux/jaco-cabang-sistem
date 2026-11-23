@@ -1,0 +1,12 @@
+_format_version: "3.0"
+
+services:
+  - name: jaco-laravel-api
+    url: http://web:80
+    routes:
+      - name: jaco-api-route
+        paths:
+          - /api
+        strip_path: false
+        protocols:
+          - http

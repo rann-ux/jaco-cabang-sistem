@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -9,16 +10,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('fakturs', function (Blueprint $table) {
-            $table->string('id_faktur', 20)->primary();
+            $table->increments('id_faktur');
             $table->string('no_faktur', 30)->unique();
-            $table->date('tanggal');
-            $table->decimal('total', 15, 2);
-            $table->string('status', 30);
 
-            $table->string('id_cabang', 20);
-            $table->string('id_pelanggan', 20);
-            $table->string('id_karyawan', 20);
-            $table->string('id_promo', 20)->nullable();
+            $table->unsignedInteger('id_cabang');
+            $table->unsignedInteger('id_pelanggan');
+            $table->unsignedInteger('id_karyawan');
+            $table->unsignedInteger('id_promo')->nullable();
+
+            $table->dateTime('tanggal')->useCurrent();
+            $table->decimal('total', 15, 2)->default(0);
+            $table->string('status', 20)->default('belum_dibayar');
 
             $table->foreign('id_cabang')
                 ->references('id_cabang')
@@ -39,7 +41,15 @@ return new class extends Migration
                 ->references('id_promo')
                 ->on('promos')
                 ->restrictOnDelete();
+
+            $table->index(['id_cabang', 'tanggal']);
         });
+
+        DB::statement("
+            ALTER TABLE fakturs
+            ADD CONSTRAINT chk_faktur_total
+            CHECK (total >= 0)
+        ");
     }
 
     public function down(): void

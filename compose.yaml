@@ -1,3 +1,5 @@
+name: jaco-cabang-sistem
+
 services:
   app:
     build:
@@ -6,19 +8,19 @@ services:
       target: app
     container_name: jaco-laravel
     restart: unless-stopped
+    volumes:
+      - .:/var/www/html
     environment:
-      APP_NAME: "Jaco Jambi Sistem"
+      APP_NAME: "Jaco Cabang Sistem"
       APP_ENV: local
       APP_KEY: ${APP_KEY}
       APP_DEBUG: "true"
       APP_URL: http://localhost:8080
-
       LOG_CHANNEL: stderr
-
       DB_CONNECTION: mysql
       DB_HOST: db
       DB_PORT: 3306
-      DB_DATABASE: jaco_jambi
+      DB_DATABASE: jaco_db
       DB_USERNAME: jaco_user
       DB_PASSWORD: ${MYSQL_PASSWORD:-local_app_password}
     depends_on:
@@ -46,12 +48,14 @@ services:
     container_name: jaco-mysql
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: jaco_jambi
+      MYSQL_DATABASE: jaco_db
       MYSQL_USER: jaco_user
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-local_app_password}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local_root_password}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test:
         - CMD-SHELL
@@ -59,6 +63,59 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - jaco-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: jaco-keycloak
+    restart: unless-stopped
+    command: start-dev
+    environment:
+      KC_DB: mysql
+      KC_DB_URL: jdbc:mysql://db:3306/keycloak_db
+      KC_DB_USERNAME: keycloak_user
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "8081:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - jaco-network
+  kong:
+    image: kong:3.9
+    container_name: jaco-kong
+    restart: unless-stopped
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 127.0.0.1:8001
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./docker/kong/kong.yml:/kong/declarative/kong.yml:ro
+    depends_on:
+      - web
+    networks:
+      - jaco-network
+
+  central-mock:
+    build:
+      context: ./docker/central-mock
+      dockerfile: Dockerfile
+    container_name: jaco-central-mock
+    restart: unless-stopped
+    expose:
+      - "3000"
     networks:
       - jaco-network
 
