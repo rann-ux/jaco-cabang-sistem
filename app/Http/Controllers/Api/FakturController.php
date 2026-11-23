@@ -14,10 +14,12 @@ use App\Models\Stok;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Services\IntegrasiPusatService;
+use Illuminate\Support\Facades\Log;
 
 class FakturController extends Controller
 {
-    public function store(Request $request)
+    public function store(Request $request, IntegrasiPusatService $integrasi)
     {
         $validated = $request->validate([
             'id_cabang' => 'required|integer|exists:cabangs,id_cabang',
@@ -167,9 +169,30 @@ class FakturController extends Controller
             ]);
         });
 
+        $hasilIntegrasi = null;
+        $statusSinkronisasi = 'berhasil';
+
+        try {
+            $hasilIntegrasi = $integrasi->kirimTransaksi([
+                'id_transaksi' => $result->no_faktur,
+                'id_cabang' => $result->id_cabang,
+                'total' => $result->total,
+                'tanggal' => $result->tanggal,
+            ]);
+        } catch (\RuntimeException $e) {
+            $statusSinkronisasi = 'gagal';
+
+            Log::warning('Sinkronisasi transaksi penjualan ke pusat gagal.', [
+                'id_faktur' => $result->id_faktur,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         return response()->json([
             'message' => 'Faktur berhasil dibuat.',
             'data' => $result,
+            'sinkronisasi_pusat' => $statusSinkronisasi,
+            'respons_pusat' => $hasilIntegrasi,
         ], 201);
     }
 }

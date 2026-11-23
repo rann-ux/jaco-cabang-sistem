@@ -23,13 +23,13 @@ class DatabaseSeeder extends Seeder
         );
 
         // 2. Data Karyawan
-        Karyawan::firstOrCreate(
+        Karyawan::updateOrCreate(
             [
                 'id_cabang' => $cabang->id_cabang,
                 'nama' => 'Admin Cabang',
-                'peran' => 'sales',
             ],
             [
+                'peran' => 'admin_cabang',
                 'status' => 'aktif',
             ]
         );

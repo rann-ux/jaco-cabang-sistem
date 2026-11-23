@@ -13,11 +13,11 @@ return new class extends Migration
             $table->unsignedInteger('id_cabang');
             $table->string('nama', 100);
             $table->enum('peran', [
+                'sales_cabang',
+                'admin_cabang',
+                'gudang_cabang',
                 'manajer_cabang',
-                'sales',
-                'admin',
-                'gudang',
-                'pengantaran',
+                'admin_pusat',
             ]);
             $table->string('status', 20)->default('aktif');
 
