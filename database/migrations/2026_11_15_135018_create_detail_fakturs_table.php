@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -9,9 +10,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('detail_fakturs', function (Blueprint $table) {
-            $table->string('id_detail', 20)->primary();
-            $table->string('id_faktur', 20);
-            $table->string('id_produk', 20);
+            $table->increments('id_detail');
+            $table->unsignedInteger('id_faktur');
+            $table->unsignedInteger('id_produk');
             $table->integer('jumlah');
             $table->decimal('harga_satuan', 15, 2);
             $table->decimal('subtotal', 15, 2);
@@ -26,6 +27,24 @@ return new class extends Migration
                 ->on('produks')
                 ->restrictOnDelete();
         });
+
+        DB::statement("
+            ALTER TABLE detail_fakturs
+            ADD CONSTRAINT chk_detail_jumlah_positive
+            CHECK (jumlah > 0)
+        ");
+
+        DB::statement("
+            ALTER TABLE detail_fakturs
+            ADD CONSTRAINT chk_detail_harga_nonneg
+            CHECK (harga_satuan >= 0)
+        ");
+
+        DB::statement("
+            ALTER TABLE detail_fakturs
+            ADD CONSTRAINT chk_detail_subtotal
+            CHECK (subtotal = jumlah * harga_satuan)
+        ");
     }
 
     public function down(): void

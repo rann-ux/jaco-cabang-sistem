@@ -9,9 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('cabangs', function (Blueprint $table) {
-            $table->string('id_cabang', 20)->primary();
-            $table->string('nama_cabang');
-            $table->string('jenis', 20);
+            $table->increments('id_cabang');
+            $table->string('nama_cabang', 100);
+            $table->enum('jenis', ['showroom', 'kantor', 'gudang']);
             $table->text('alamat');
         });
     }

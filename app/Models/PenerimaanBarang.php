@@ -8,18 +8,22 @@ class PenerimaanBarang extends Model
 {
     protected $table = 'penerimaan_barangs';
     protected $primaryKey = 'id_penerimaan';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'id_penerimaan',
         'id_cabang',
         'id_produk',
         'id_karyawan',
         'jumlah',
         'tanggal',
         'no_dokumen_pusat',
+    ];
+
+    protected $casts = [
+        'jumlah' => 'integer',
+        'tanggal' => 'datetime',
     ];
 
     public function cabang()

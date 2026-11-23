@@ -8,20 +8,25 @@ class Faktur extends Model
 {
     protected $table = 'fakturs';
     protected $primaryKey = 'id_faktur';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'id_faktur',
         'no_faktur',
-        'tanggal',
-        'total',
-        'status',
         'id_cabang',
         'id_pelanggan',
         'id_karyawan',
         'id_promo',
+        'tanggal',
+        'total',
+        'skema_pembayaran',
+        'status',
+    ];
+
+    protected $casts = [
+        'tanggal' => 'datetime',
+        'total' => 'decimal:2',
     ];
 
     public function cabang()

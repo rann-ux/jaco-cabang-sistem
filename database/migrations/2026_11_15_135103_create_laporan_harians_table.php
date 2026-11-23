@@ -9,12 +9,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('laporan_harians', function (Blueprint $table) {
-            $table->string('id_laporan', 20)->primary();
-            $table->string('id_cabang', 20);
-            $table->string('id_karyawan', 20);
+            $table->increments('id_laporan');
+            $table->unsignedInteger('id_cabang');
+            $table->unsignedInteger('id_karyawan');
             $table->date('tanggal');
-            $table->string('jenis_laporan', 30);
-            $table->string('status_kirim', 20);
+            $table->enum('jenis_laporan', [
+                'penjualan',
+                'stok',
+                'kas_masuk',
+                'kas_keluar',
+            ]);
+            $table->string('status_kirim', 20)->default('belum_kirim');
             $table->dateTime('tgl_kirim')->nullable();
 
             $table->foreign('id_cabang')
@@ -26,6 +31,12 @@ return new class extends Migration
                 ->references('id_karyawan')
                 ->on('karyawans')
                 ->restrictOnDelete();
+
+            $table->unique([
+                'id_cabang',
+                'tanggal',
+                'jenis_laporan',
+            ]);
         });
     }
 

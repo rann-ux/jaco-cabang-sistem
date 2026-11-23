@@ -8,18 +8,22 @@ class MutasiStok extends Model
 {
     protected $table = 'mutasi_stoks';
     protected $primaryKey = 'id_mutasi';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'id_mutasi',
         'id_stok',
         'id_karyawan',
         'jenis',
         'jumlah',
         'tanggal',
         'referensi_dokumen',
+    ];
+
+    protected $casts = [
+        'jumlah' => 'integer',
+        'tanggal' => 'datetime',
     ];
 
     public function stok()

@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -9,13 +10,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('mutasi_stoks', function (Blueprint $table) {
-            $table->string('id_mutasi', 20)->primary();
-            $table->string('id_stok', 20);
-            $table->string('id_karyawan', 20);
-            $table->string('jenis', 20);
+            $table->increments('id_mutasi');
+            $table->unsignedInteger('id_stok');
+            $table->unsignedInteger('id_karyawan');
+            $table->enum('jenis', ['masuk', 'keluar']);
             $table->integer('jumlah');
-            $table->date('tanggal');
-            $table->string('referensi_dokumen')->nullable();
+            $table->dateTime('tanggal')->useCurrent();
+            $table->string('referensi_dokumen', 50)->nullable();
 
             $table->foreign('id_stok')
                 ->references('id_stok')
@@ -27,6 +28,12 @@ return new class extends Migration
                 ->on('karyawans')
                 ->restrictOnDelete();
         });
+
+        DB::statement("
+            ALTER TABLE mutasi_stoks
+            ADD CONSTRAINT chk_mutasi_jumlah_positive
+            CHECK (jumlah > 0)
+        ");
     }
 
     public function down(): void

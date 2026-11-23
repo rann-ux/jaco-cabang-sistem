@@ -1,0 +1,12 @@
+{
+  "name": "jaco-central-mock",
+  "version": "1.0.0",
+  "description": "Mock API untuk simulasi integrasi sistem pusat Jaco",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "4.21.2"
+  }
+}

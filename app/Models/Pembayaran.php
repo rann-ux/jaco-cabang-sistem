@@ -8,12 +8,11 @@ class Pembayaran extends Model
 {
     protected $table = 'pembayarans';
     protected $primaryKey = 'id_bayar';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'id_bayar',
         'id_faktur',
         'metode',
         'jumlah',
@@ -27,8 +26,8 @@ class Pembayaran extends Model
         'jumlah' => 'decimal:2',
         'status_verifikasi_sales' => 'boolean',
         'status_cek_pusat' => 'boolean',
-        'tanggal' => 'date',
-        'tgl_cek_pusat' => 'date',
+        'tanggal' => 'datetime',
+        'tgl_cek_pusat' => 'datetime',
     ];
 
     public function faktur()

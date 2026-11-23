@@ -8,17 +8,21 @@ class Produk extends Model
 {
     protected $table = 'produks';
     protected $primaryKey = 'id_produk';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'id_produk',
         'kode_produk',
         'nama_produk',
         'kategori',
         'harga',
         'masa_garansi',
+    ];
+
+    protected $casts = [
+        'harga' => 'decimal:2',
+        'masa_garansi' => 'integer',
     ];
 
     public function stoks()

@@ -26,7 +26,13 @@ CREATE TABLE Karyawan (
   id_karyawan  INT AUTO_INCREMENT PRIMARY KEY,
   id_cabang    INT NOT NULL,
   nama         VARCHAR(100) NOT NULL,
-  peran        ENUM('manajer_cabang','sales','admin','gudang','pengantaran') NOT NULL,
+  peran ENUM(
+      'sales_cabang',
+      'admin_cabang',
+      'gudang_cabang',
+      'manajer_cabang',
+      'admin_pusat'
+  ) NOT NULL,
   status       VARCHAR(20) NOT NULL DEFAULT 'aktif',
   CONSTRAINT fk_karyawan_cabang FOREIGN KEY (id_cabang) REFERENCES Cabang(id_cabang)
 ) ENGINE=InnoDB;
