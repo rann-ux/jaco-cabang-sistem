@@ -238,3 +238,77 @@ CREATE TABLE LaporanHarian (
 -- Indeks pendukung pencarian per cabang/tanggal (MySQL otomatis membuat indeks untuk FK)
 CREATE INDEX idx_faktur_cabang_tanggal ON Faktur (id_cabang, tanggal);
 CREATE INDEX idx_kas_cabang_tanggal    ON KasTransaksi (id_cabang, tanggal);
+
+-- ---------- Indeks tambahan (3.1) ----------
+CREATE INDEX idx_mutasi_stok_tanggal  ON MutasiStok (id_stok, tanggal);
+CREATE INDEX idx_pembayaran_cek_pusat ON Pembayaran (status_cek_pusat, tanggal);
+
+-- ---------- View laporan harian dan rekap mingguan (3.1, US-07, CR-01) ----------
+CREATE OR REPLACE VIEW v_laporan_penjualan AS
+SELECT f.id_cabang,
+       c.nama_cabang,
+       CAST(f.tanggal AS DATE) AS tanggal,
+       COUNT(*)                AS jumlah_faktur,
+       SUM(f.total)            AS total_penjualan,
+       SUM(CASE WHEN f.status = 'lunas' THEN 1 ELSE 0 END) AS faktur_lunas
+FROM Faktur f
+JOIN Cabang c ON c.id_cabang = f.id_cabang
+GROUP BY f.id_cabang, c.nama_cabang, CAST(f.tanggal AS DATE);
+
+CREATE OR REPLACE VIEW v_laporan_stok AS
+SELECT s.id_cabang,
+       c.nama_cabang,
+       p.kode_produk,
+       p.nama_produk,
+       s.jumlah,
+       s.batas_minimum,
+       CASE WHEN s.jumlah = 0 THEN 'habis'
+            WHEN s.jumlah <= s.batas_minimum THEN 'minimum'
+            ELSE 'aman' END AS status_stok,
+       s.tgl_update
+FROM Stok s
+JOIN Cabang c ON c.id_cabang = s.id_cabang
+JOIN Produk p ON p.id_produk = s.id_produk;
+
+CREATE OR REPLACE VIEW v_laporan_kas_masuk AS
+SELECT k.id_cabang,
+       c.nama_cabang,
+       CAST(k.tanggal AS DATE) AS tanggal,
+       COUNT(*)                AS jumlah_transaksi,
+       SUM(k.jumlah)           AS total_kas_masuk
+FROM KasTransaksi k
+JOIN Cabang c ON c.id_cabang = k.id_cabang
+WHERE k.jenis = 'masuk'
+GROUP BY k.id_cabang, c.nama_cabang, CAST(k.tanggal AS DATE);
+
+CREATE OR REPLACE VIEW v_laporan_kas_keluar AS
+SELECT k.id_cabang,
+       c.nama_cabang,
+       CAST(k.tanggal AS DATE) AS tanggal,
+       SUM(CASE WHEN k.jenis = 'keluar'  THEN k.jumlah ELSE 0 END) AS kas_keluar_operasional,
+       SUM(CASE WHEN k.jenis = 'setoran' THEN k.jumlah ELSE 0 END) AS setoran_ke_pusat,
+       SUM(k.jumlah) AS total_kas_keluar
+FROM KasTransaksi k
+JOIN Cabang c ON c.id_cabang = k.id_cabang
+WHERE k.jenis IN ('keluar', 'setoran')
+GROUP BY k.id_cabang, c.nama_cabang, CAST(k.tanggal AS DATE);
+
+CREATE OR REPLACE VIEW v_rekap_mingguan AS
+SELECT x.id_cabang,
+       YEARWEEK(x.tgl, 1) AS tahun_minggu,
+       MIN(CAST(x.tgl AS DATE) - INTERVAL WEEKDAY(x.tgl) DAY) AS awal_minggu,
+       SUM(x.faktur)      AS jumlah_faktur,
+       SUM(x.penjualan)   AS total_penjualan,
+       SUM(x.kas_masuk)   AS total_kas_masuk,
+       SUM(x.kas_keluar)  AS total_kas_keluar
+FROM (
+  SELECT id_cabang, tanggal AS tgl, 1 AS faktur, total AS penjualan,
+         0 AS kas_masuk, 0 AS kas_keluar
+  FROM Faktur
+  UNION ALL
+  SELECT id_cabang, tanggal, 0, 0,
+         CASE WHEN jenis = 'masuk' THEN jumlah ELSE 0 END,
+         CASE WHEN jenis IN ('keluar', 'setoran') THEN jumlah ELSE 0 END
+  FROM KasTransaksi
+) x
+GROUP BY x.id_cabang, YEARWEEK(x.tgl, 1);
