@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use App\Services\IntegrasiPusatService;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class FakturController extends Controller
 {
@@ -93,10 +94,10 @@ class FakturController extends Controller
                 }
 
                 if ($stok->jumlah < $item['jumlah']) {
-                    throw ValidationException::withMessages([
-                        "items.$index.jumlah" =>
-                            'Stok tidak mencukupi. Stok tersedia: ' . $stok->jumlah,
-                    ]);
+                    throw new HttpException(
+                        409,
+                        'Stok tidak mencukupi. Stok tersedia: ' . $stok->jumlah
+                    );
                 }
 
                 $harga = (float) $produk->harga;
@@ -194,5 +195,54 @@ class FakturController extends Controller
             'sinkronisasi_pusat' => $statusSinkronisasi,
             'respons_pusat' => $hasilIntegrasi,
         ], 201);
+    }
+
+    public function show(Request $request, $id)
+    {
+        $faktur = Faktur::with([
+            'detailFakturs.produk',
+            'pelanggan',
+            'cabang',
+            'karyawan',
+            'promo',
+            'poPengantaran',
+            'pembayarans',
+        ])->findOrFail($id);
+
+        // Batasi akses pengguna cabang berdasarkan identitas Keycloak.
+        $idCabang = $request->attributes->get('id_cabang');
+        $roles = (array) $request->attributes->get('keycloak_roles', []);
+
+        $branchRoles = [
+            'sales_cabang',
+            'admin_cabang',
+            'gudang_cabang',
+            'manajer_cabang',
+        ];
+
+        // Pengguna dengan role cabang wajib memiliki atribut id_cabang.
+        if (
+            count(array_intersect($branchRoles, $roles)) > 0
+            && $idCabang === null
+        ) {
+            return response()->json([
+                'message' => 'Identitas cabang pengguna tidak ditemukan.',
+            ], 403);
+        }
+
+        // Pengguna cabang hanya boleh melihat faktur dari cabangnya sendiri.
+        if (
+            $idCabang !== null
+            && (int) $faktur->id_cabang !== (int) $idCabang
+        ) {
+            return response()->json([
+                'message' => 'Anda tidak memiliki akses ke faktur dari cabang lain.',
+            ], 403);
+        }
+        
+        return response()->json([
+            'message' => 'Detail faktur berhasil diambil.',
+            'data' => $faktur,
+        ], 200);
     }
 }

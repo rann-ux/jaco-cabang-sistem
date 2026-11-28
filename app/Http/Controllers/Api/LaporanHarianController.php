@@ -48,6 +48,29 @@ class LaporanHarianController extends Controller
         $laporan = LaporanHarian::with(['cabang', 'karyawan'])
             ->findOrFail($id);
 
+        // Batasi akses pengguna cabang ke laporan cabangnya sendiri.
+        $roles = request()->attributes->get('keycloak_roles', []);
+
+        $branchRoles = [
+            'admin_cabang',
+            'sales_cabang',
+            'gudang_cabang',
+            'manajer_cabang',
+        ];
+
+        if (count(array_intersect($branchRoles, $roles)) > 0) {
+            $idCabangLogin = request()->attributes->get('id_cabang');
+
+            if (
+                $idCabangLogin === null ||
+                (int) $laporan->id_cabang !== (int) $idCabangLogin
+            ) {
+                return response()->json([
+                    'message' => 'Anda tidak memiliki akses ke laporan cabang ini.',
+                ], 403);
+            }
+        }
+        
         $ringkasan = [];
 
     if (in_array($laporan->jenis_laporan, ['kas_masuk', 'kas_keluar'])) {
@@ -119,25 +142,26 @@ class LaporanHarianController extends Controller
             ], 422);
         }
 
-        $laporan = LaporanHarian::firstOrCreate(
-            [
-                'id_cabang' => $validated['id_cabang'],
-                'tanggal' => $validated['tanggal'],
-                'jenis_laporan' => $validated['jenis_laporan'],
-            ],
-            [
-                'id_karyawan' => $validated['id_karyawan'],
-                'status_kirim' => 'belum_kirim',
-                'tgl_kirim' => null,
-            ]
-        );
+        $laporan = LaporanHarian::where('id_cabang', $validated['id_cabang'])
+            ->whereDate('tanggal', $validated['tanggal'])
+            ->where('jenis_laporan', $validated['jenis_laporan'])
+            ->first();
 
-        if (!$laporan->wasRecentlyCreated) {
+        if ($laporan) {
             return response()->json([
                 'message' => 'Laporan untuk cabang, tanggal, dan jenis tersebut sudah tersedia.',
                 'data' => $laporan,
             ], 409);
         }
+
+        $laporan = LaporanHarian::create([
+            'id_cabang' => $validated['id_cabang'],
+            'id_karyawan' => $validated['id_karyawan'],
+            'tanggal' => $validated['tanggal'],
+            'jenis_laporan' => $validated['jenis_laporan'],
+            'status_kirim' => 'belum_kirim',
+            'tgl_kirim' => null,
+        ]);
 
         return response()->json([
             'message' => 'Laporan harian berhasil dibuat.',

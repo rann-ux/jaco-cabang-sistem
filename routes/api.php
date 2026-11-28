@@ -15,6 +15,9 @@ use App\Http\Controllers\Api\LaporanHarianController;
 Route::prefix('v1')->middleware('keycloak')->group(function () {
 
     // M1 - Penjualan dan Faktur
+    Route::get('/faktur/{id}', [FakturController::class, 'show'])
+        ->middleware('role:sales_cabang,admin_cabang,manajer_cabang,admin_pusat');
+
     Route::post('/faktur', [FakturController::class, 'store'])
         ->middleware('role:sales_cabang');
 

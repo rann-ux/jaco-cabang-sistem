@@ -7,6 +7,9 @@ use App\Models\KasTransaksi;
 use App\Models\Karyawan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\IntegrasiPusatService;
+use Illuminate\Support\Facades\Log;
+use RuntimeException;
 
 class KasController extends Controller
 {
@@ -78,6 +81,7 @@ class KasController extends Controller
             ], 422);
         }
 
+        // Simpan transaksi kas ke database cabang.
         $transaksi = DB::transaction(function () use ($validated) {
             return KasTransaksi::create([
                 'id_cabang' => $validated['id_cabang'],
@@ -90,9 +94,36 @@ class KasController extends Controller
             ]);
         });
 
+        // Kirim transaksi kas ke sistem pusat setelah transaksi lokal berhasil.
+        $statusSinkronisasi = 'berhasil';
+        $responsPusat = null;
+
+        try {
+            $responsPusat = app(IntegrasiPusatService::class)->kirimKas([
+                'id_kas' => $transaksi->id_kas,
+                'id_cabang' => $transaksi->id_cabang,
+                'id_faktur' => $transaksi->id_faktur,
+                'jenis' => $transaksi->jenis,
+                'jumlah' => $transaksi->jumlah,
+                'tanggal' => $transaksi->tanggal->toDateTimeString(),
+                'keterangan' => $transaksi->keterangan,
+            ]);
+        } catch (RuntimeException $e) {
+            $statusSinkronisasi = 'gagal';
+
+            Log::warning('Sinkronisasi transaksi kas ke pusat gagal.', [
+                'id_kas' => $transaksi->id_kas,
+                'id_cabang' => $transaksi->id_cabang,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         return response()->json([
             'message' => 'Transaksi kas berhasil dicatat.',
             'data' => $transaksi->load(['cabang', 'karyawan']),
+            'sinkronisasi_pusat' => $statusSinkronisasi,
+            'respons_pusat' => $responsPusat,
         ], 201);
     }
+
 }

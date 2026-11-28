@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Throwable;
+use App\Models\Karyawan;
 
 class KeycloakAuth
 {
@@ -84,6 +85,34 @@ class KeycloakAuth
 
             // Ambil realm roles.
             $roles = $payload->realm_access->roles ?? [];
+
+            // Petakan akun Keycloak ke data karyawan untuk pengguna cabang.
+            $branchRoles = [
+                'admin_cabang',
+                'sales_cabang',
+                'gudang_cabang',
+                'manajer_cabang',
+            ];
+
+            $karyawan = null;
+
+            if (count(array_intersect($branchRoles, $roles)) > 0) {
+                $keycloakId = $payload->sub ?? null;
+
+                $karyawan = Karyawan::where('keycloak_id', $keycloakId)
+                    ->where('status', 'aktif')
+                    ->first();
+
+                if (!$karyawan) {
+                    return response()->json([
+                        'message' => 'Akun Keycloak belum terhubung dengan data karyawan aktif.',
+                    ], 403);
+                }
+
+                $request->attributes->set('keycloak_employee', $karyawan);
+                $request->attributes->set('id_karyawan', $karyawan->id_karyawan);
+                $request->attributes->set('id_cabang', $karyawan->id_cabang);
+            }
 
             $request->attributes->set('keycloak_user', $payload);
             $request->attributes->set('keycloak_roles', $roles);

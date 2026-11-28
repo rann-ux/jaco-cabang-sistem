@@ -55,4 +55,10 @@ class IntegrasiPusatService
             );
         }
     }
+
+    public function kirimKas(array $data): array
+    {
+        return $this->kirim('/api/v1/kas', $data);
+    }
+
 }

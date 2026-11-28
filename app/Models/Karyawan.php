@@ -17,6 +17,7 @@ class Karyawan extends Model
         'nama',
         'peran',
         'status',
+        'keycloak_id',
     ];
 
     public function cabang()

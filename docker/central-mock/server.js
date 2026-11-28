@@ -84,6 +84,48 @@ app.post("/api/v1/penerimaan-barang", (req, res) => {
     });
 });
 
+// Menerima transaksi kas dari cabang
+app.post("/api/v1/kas", (req, res) => {
+    const {
+        id_kas,
+        id_cabang,
+        id_faktur,
+        jenis,
+        jumlah,
+        tanggal,
+        keterangan
+    } = req.body;
+
+    if (
+        !id_kas ||
+        !id_cabang ||
+        !["masuk", "keluar", "setoran"].includes(jenis) ||
+        jumlah === undefined ||
+        Number(jumlah) <= 0 ||
+        !tanggal
+    ) {
+        return res.status(422).json({
+            success: false,
+            message: "Data transaksi kas belum lengkap atau tidak valid."
+        });
+    }
+
+    return res.status(201).json({
+        success: true,
+        message: "Transaksi kas berhasil diterima oleh sistem pusat.",
+        data: {
+            id_kas,
+            id_cabang,
+            id_faktur: id_faktur ?? null,
+            jenis,
+            jumlah,
+            tanggal,
+            keterangan: keterangan ?? null,
+            status_sinkronisasi: "diterima"
+        }
+    });
+});
+
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`Jaco Central Mock Service berjalan pada port ${PORT}`);
 });
